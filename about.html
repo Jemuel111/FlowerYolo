@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — FloraLens</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117; --surface: #161b22; --surface2: #1c2330;
+            --border: rgba(255,255,255,0.07); --accent: #a8d8a0;
+            --accent2: #e8c4a0; --accent3: #d4a0c8;
+            --text: #e6edf3; --muted: #7d8590;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: radial-gradient(ellipse at 20% 20%, rgba(168,216,160,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(212,160,200,0.06) 0%, transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(13,17,23,0.85); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem; display: flex; align-items: center;
+            justify-content: space-between; height: 64px;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo { width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), var(--accent3)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .nav-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--text); }
+        .nav-title span { color: var(--accent); }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text); }
+
+        .container { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 4rem 1.5rem; }
+
+        h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--muted); margin-bottom: 3rem; font-size: 1.05rem; }
+
+        .section { margin-bottom: 2.5rem; }
+        .section h2 { font-family: 'Playfair Display', serif; font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent); }
+        .section p { color: var(--muted); line-height: 1.8; margin-bottom: 0.75rem; }
+
+        .tech-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        @media (max-width: 500px) { .tech-grid { grid-template-columns: 1fr; } }
+        .tech-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+        .tech-card h3 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+        .tech-card p { color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+        .tech-emoji { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+
+        .flower-table { width: 100%; border-collapse: collapse; }
+        .flower-table th, .flower-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .flower-table th { color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; background: var(--surface2); }
+        .flower-table td { color: var(--text); }
+        .flower-table tr:last-child td { border-bottom: none; }
+
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 1.2rem; color: var(--text); text-decoration: none; font-size: 0.875rem; transition: all 0.2s; margin-bottom: 2rem; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="/" class="nav-brand">
+        <div class="nav-logo">🌸</div>
+        <span class="nav-title">Flora<span>Lens</span></span>
+    </a>
+    <div class="nav-links">
+        <a href="/">Detect</a>
+        <a href="/about">About</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/" class="back-btn">← Back to Detection</a>
+    <h1>About FloraLens</h1>
+    <p class="subtitle">ITST 303 — Group Performance Task #3 · Object Detection System using YOLOv8 + Flask</p>
+
+    <div class="section">
+        <h2>What This System Does</h2>
+        <p>FloraLens is an AI-powered flower recognition system that uses Ultralytics YOLOv8 to classify flower images into one of five categories: Daisy, Dandelion, Rose, Sunflower, and Tulip.</p>
+        <p>Users upload a photo through the web interface, and the system runs YOLO inference to return the top predictions with confidence scores, bounding boxes, and descriptive metadata about each flower.</p>
+    </div>
+
+    <div class="section">
+        <h2>Technology Stack</h2>
+        <div class="tech-grid">
+            <div class="tech-card">
+                <span class="tech-emoji">🤖</span>
+                <h3>Ultralytics YOLOv8</h3>
+                <p>State-of-the-art object detection & classification model trained on the Kaggle Flowers Recognition dataset.</p>
+            </div>
+            <div class="tech-card">
+                <span class="tech-emoji">🐍</span>
+                <h3>Flask (Python)</h3>
+                <p>Lightweight Python web framework handling image uploads, routing, and rendering Jinja2 templates.</p>
+            </div>
+            <div class="tech-card">
+                <span class="tech-emoji">📊</span>
+                <h3>Kaggle Dataset</h3>
+                <p>4,242 flower images across 5 classes — Daisy, Dandelion, Rose, Sunflower, and Tulip.</p>
+            </div>
+            <div class="tech-card">
+                <span class="tech-emoji">🎨</span>
+                <h3>Jinja2 Templates</h3>
+                <p>Server-side templating for dynamic result rendering — upload form, result images, and prediction scores.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Dataset Overview</h2>
+        <table class="flower-table">
+            <thead>
+                <tr><th>Flower</th><th>Emoji</th><th>Approx. Images</th><th>Characteristics</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Daisy</td><td>🌼</td><td>~769</td><td>White petals, yellow center</td></tr>
+                <tr><td>Dandelion</td><td>💛</td><td>~1,052</td><td>Bright yellow, wildflower</td></tr>
+                <tr><td>Rose</td><td>🌹</td><td>~784</td><td>Classic bloom, many colors</td></tr>
+                <tr><td>Sunflower</td><td>🌻</td><td>~734</td><td>Large, bold, heliotropic</td></tr>
+                <tr><td>Tulip</td><td>🌷</td><td>~984</td><td>Cup-shaped, spring bloom</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>How Inference Works</h2>
+        <p>1. User uploads a flower image via the web form.</p>
+        <p>2. Flask saves the image to <code>static/uploads/</code> with a unique timestamp filename.</p>
+        <p>3. YOLOv8 runs inference — returning class probabilities (classification) or bounding boxes (detection).</p>
+        <p>4. The annotated result image is saved to <code>static/results/</code> and rendered back to the user with top-5 confidence scores.</p>
+    </div>
+</div>
+</body>
+</html>

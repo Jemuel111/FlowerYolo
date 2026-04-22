@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloraLens — Flower Recognition AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2330;
+            --border: rgba(255,255,255,0.07);
+            --accent: #a8d8a0;
+            --accent2: #e8c4a0;
+            --accent3: #d4a0c8;
+            --text: #e6edf3;
+            --muted: #7d8590;
+            --danger: #f85149;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Botanical background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(168,216,160,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(212,160,200,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(232,196,160,0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Subtle grid */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13,17,23,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .nav-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .nav-title span { color: var(--accent); }
+
+        .nav-links { display: flex; gap: 1.5rem; }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--text); }
+
+        /* ─── HERO ─── */
+        .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 5rem 2rem 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(168,216,160,0.1);
+            border: 1px solid rgba(168,216,160,0.2);
+            border-radius: 100px;
+            padding: 4px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            animation: fadeDown 0.6s ease forwards;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+            animation: fadeDown 0.7s ease 0.1s both;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.7;
+            max-width: 520px;
+            margin: 0 auto 2.5rem;
+            animation: fadeDown 0.7s ease 0.2s both;
+        }
+
+        /* ─── MAIN CONTAINER ─── */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 1.5rem 5rem;
+        }
+
+        /* ─── UPLOAD CARD ─── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease 0.3s both;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(168,216,160,0.12);
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed rgba(168,216,160,0.25);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(168,216,160,0.02);
+            position: relative;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(168,216,160,0.06);
+            transform: scale(1.005);
+        }
+
+        .drop-zone-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            filter: grayscale(0.3);
+        }
+
+        .drop-zone h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .drop-zone p {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Preview */
+        #preview-container {
+            display: none;
+            margin-top: 1.5rem;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        #preview-container img {
+            width: 100%;
+            max-height: 320px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .preview-info {
+            padding: 0.75rem 1rem;
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .preview-name { color: var(--text); font-weight: 500; }
+        .preview-size { color: var(--muted); }
+
+        /* Submit Button */
+        .btn-detect {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 0.9rem 2rem;
+            background: linear-gradient(135deg, #3d6b38, #5a8f54);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+
+        .btn-detect:hover {
+            background: linear-gradient(135deg, #4a7d44, #6aa163);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(90,143,84,0.3);
+        }
+
+        .btn-detect:active { transform: translateY(0); }
+
+        /* Loading state */
+        .btn-detect.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* ─── ERROR ─── */
+        .error-box {
+            background: rgba(248,81,73,0.08);
+            border: 1px solid rgba(248,81,73,0.25);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: #ff7b72;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            animation: fadeUp 0.4s ease;
+        }
+
+        /* ─── RESULTS ─── */
+        .results-section {
+            animation: fadeUp 0.5s ease;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+        }
+
+        .confidence-badge {
+            background: rgba(168,216,160,0.15);
+            border: 1px solid rgba(168,216,160,0.3);
+            color: var(--accent);
+            border-radius: 100px;
+            padding: 3px 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Top prediction banner */
+        .top-prediction {
+            background: linear-gradient(135deg, rgba(168,216,160,0.08), rgba(212,160,200,0.08));
+            border: 1px solid rgba(168,216,160,0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .top-emoji {
+            font-size: 3.5rem;
+            line-height: 1;
+        }
+
+        .top-info h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            text-transform: capitalize;
+            margin-bottom: 0.3rem;
+        }
+
+        .top-info p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-width: 400px;
+        }
+
+        .top-conf {
+            margin-left: auto;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .top-conf .conf-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .top-conf .conf-label {
+            color: var(--muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        /* Images grid */
+        .images-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .images-grid { grid-template-columns: 1fr; }
+            .top-prediction { flex-wrap: wrap; }
+            .top-conf { margin-left: 0; }
+        }
+
+        .image-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .image-card-label {
+            padding: 0.6rem 1rem;
+            background: var(--surface2);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .image-card img {
+            width: 100%;
+            max-height: 260px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* All predictions list */
+        .predictions-list {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .predictions-list-header {
+            padding: 0.75rem 1.25rem;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .prediction-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .prediction-row:last-child { border-bottom: none; }
+        .prediction-row:hover { background: rgba(255,255,255,0.02); }
+
+        .prediction-row.top-row {
+            background: rgba(168,216,160,0.04);
+        }
+
+        .pred-emoji { font-size: 1.4rem; flex-shrink: 0; }
+
+        .pred-label {
+            flex: 1;
+            text-transform: capitalize;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .pred-bar-wrap {
+            flex: 2;
+            height: 6px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .pred-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent3));
+            border-radius: 100px;
+            transition: width 1s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .pred-conf {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--accent);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .pred-rank {
+            font-size: 0.7rem;
+            color: var(--muted);
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* ─── STATS ROW ─── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease 0.4s both;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        /* ─── FLOWER PILLS (dataset info) ─── */
+        .dataset-info {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease 0.5s both;
+        }
+
+        .dataset-info h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            color: var(--muted);
+        }
+
+        .flower-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: capitalize;
+        }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── FOOTER ─── */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        footer span { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a href="/" class="nav-brand">
+        <div class="nav-logo">🌸</div>
+        <span class="nav-title">Flora<span>Lens</span></span>
+    </a>
+    <div class="nav-links">
+        <a href="/">Detect</a>
+        <a href="/about">About</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-badge">🤖 YOLOv8 · Flower Recognition AI</div>
+    <h1>Identify Any Flower<br>with <em>AI Precision</em></h1>
+    <p>Upload a flower photo and let our deep learning model classify it instantly — powered by Ultralytics YOLOv8 trained on the Flowers Recognition dataset.</p>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    <!-- Error -->
+    {% if error %}
+    <div class="error-box">
+        <span>⚠️</span>
+        <span>{{ error }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Dataset info -->
+    <div class="dataset-info">
+        <h4>Recognizable Flowers (Kaggle Flowers Recognition Dataset)</h4>
+        <div class="flower-pills">
+            <div class="pill">🌼 Daisy</div>
+            <div class="pill">💛 Dandelion</div>
+            <div class="pill">🌹 Rose</div>
+            <div class="pill">🌻 Sunflower</div>
+            <div class="pill">🌷 Tulip</div>
+        </div>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">📷</div>
+            <div class="card-title">Upload Flower Image</div>
+        </div>
+
+        <form action="/predict" method="post" enctype="multipart/form-data" id="upload-form">
+            <div class="drop-zone" id="drop-zone">
+                <input type="file" name="image" id="file-input" accept="image/*" required>
+                <span class="drop-zone-icon">🌺</span>
+                <h3>Drop your flower image here</h3>
+                <p>or click to browse · PNG, JPG, JPEG, GIF, BMP, WEBP · max 16MB</p>
+            </div>
+
+            <div id="preview-container">
+                <img id="preview-img" src="" alt="Preview">
+                <div class="preview-info">
+                    <span class="preview-name" id="preview-name"></span>
+                    <span class="preview-size" id="preview-size"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-detect" id="detect-btn">
+                <div class="spinner" id="spinner"></div>
+                <span id="btn-text">🔍 Detect Flower</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Results -->
+    {% if top_prediction %}
+    <div class="results-section">
+        <div class="results-header">
+            <h2>Detection Results</h2>
+            <span class="confidence-badge">✓ {{ "%.1f"|format(top_prediction.confidence) }}% confident</span>
+        </div>
+
+        <!-- Top prediction banner -->
+        <div class="top-prediction">
+            <div class="top-emoji">{{ top_prediction.emoji }}</div>
+            <div class="top-info">
+                <h3>{{ top_prediction.label }}</h3>
+                <p>{{ top_prediction.description }}</p>
+            </div>
+            <div class="top-conf">
+                <div class="conf-num">{{ "%.0f"|format(top_prediction.confidence) }}%</div>
+                <div class="conf-label">Confidence</div>
+            </div>
+        </div>
+
+        <!-- Before / After images -->
+        <div class="images-grid">
+            {% if original_image %}
+            <div class="image-card">
+                <div class="image-card-label">📤 Original Upload</div>
+                <img src="{{ original_image }}" alt="Original Image">
+            </div>
+            {% endif %}
+            {% if result_image %}
+            <div class="image-card">
+                <div class="image-card-label">🤖 AI Analysis</div>
+                <img src="{{ result_image }}" alt="YOLO Result">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- All predictions -->
+        {% if detections|length > 1 %}
+        <div class="predictions-list">
+            <div class="predictions-list-header">Top {{ detections|length }} Predictions</div>
+            {% for d in detections %}
+            <div class="prediction-row {% if loop.first %}top-row{% endif %}">
+                <span class="pred-rank">#{{ loop.index }}</span>
+                <span class="pred-emoji">{{ d.emoji }}</span>
+                <span class="pred-label">{{ d.label }}</span>
+                <div class="pred-bar-wrap">
+                    <div class="pred-bar" style="width: {{ d.confidence }}%"></div>
+                </div>
+                <span class="pred-conf">{{ "%.1f"|format(d.confidence) }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <p>FloraLens · ITST 303 Group Performance Task #3 · Built with <span>YOLOv8</span> + Flask</p>
+</footer>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImg = document.getElementById('preview-img');
+    const previewName = document.getElementById('preview-name');
+    const previewSize = document.getElementById('preview-size');
+    const form = document.getElementById('upload-form');
+    const detectBtn = document.getElementById('detect-btn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btn-text');
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function showPreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            previewName.textContent = file.name;
+            previewSize.textContent = formatBytes(file.size);
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) showPreview(fileInput.files[0]);
+    });
+
+    ['dragenter', 'dragover'].forEach(e => {
+        dropZone.addEventListener(e, (ev) => {
+            ev.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(e => {
+        dropZone.addEventListener(e, () => dropZone.classList.remove('drag-over'));
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(file);
+        }
+    });
+
+    form.addEventListener('submit', () => {
+        detectBtn.classList.add('loading');
+        spinner.style.display = 'block';
+        btnText.textContent = 'Analyzing...';
+    });
+
+    // Animate confidence bars on load
+    document.querySelectorAll('.pred-bar').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        setTimeout(() => { bar.style.width = w; }, 200);
+    });
+</script>
+
+</body>
+</html>
