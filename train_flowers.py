@@ -1,8 +1,3 @@
-"""
-train_flowers.py
-────────────────────────────────────────────────────────────────────────────────
-Train a YOLOv8 classification model on the Kaggle Flowers dataset.
-"""
 
 import os
 import shutil
@@ -10,7 +5,7 @@ import random
 from pathlib import Path
 from ultralytics import YOLO
 
-# ─── CONFIG ─────────────────────────────────────────────────────────────────
+# ─── CONFIG ───
 RAW_DATASET_DIR = Path("flowers_raw/flowers")
 PREPARED_DIR    = Path("flowers_dataset")
 
@@ -26,7 +21,7 @@ SEED        = 42
 MODEL_BASE  = "yolov8n-cls.pt"
 RUN_NAME    = "flowers_train"
 
-# ─── DATASET PREP ───────────────────────────────────────────────────────────
+# ─── DATASET PREP 
 def prepare_dataset():
     random.seed(SEED)
 
@@ -64,7 +59,7 @@ def prepare_dataset():
     print(f"[INFO] Dataset prepared at '{PREPARED_DIR}'")
 
 
-# ─── TRAINING ───────────────────────────────────────────────────────────────
+# ─── TRAINING ────
 def train():
     model = YOLO(MODEL_BASE)
     print(f"[INFO] Training {MODEL_BASE} for {EPOCHS} epochs...")
@@ -75,7 +70,7 @@ def train():
         epochs=EPOCHS,
         imgsz=IMAGE_SIZE,
         batch=BATCH_SIZE,
-        name=RUN_NAME,      # ✅ ONLY name (NO project to avoid duplication)
+        name=RUN_NAME,   
         exist_ok=True,
         patience=10,
         lr0=0.001,
@@ -87,7 +82,7 @@ def train():
     return results
 
 
-# ─── EVALUATION ─────────────────────────────────────────────────────────────
+# ─── EVALUATION ──────
 def evaluate(best_weights: Path):
     model = YOLO(str(best_weights))
     metrics = model.val(data=str(PREPARED_DIR), split="test")
@@ -97,7 +92,7 @@ def evaluate(best_weights: Path):
     print(f"Top-5 Accuracy: {metrics.top5:.4f}")
 
 
-# ─── SAMPLE INFERENCE ───────────────────────────────────────────────────────
+# ─── SAMPLE INFERENCE ────
 def run_sample_inference(best_weights: Path):
     model = YOLO(str(best_weights))
 
@@ -124,7 +119,7 @@ def run_sample_inference(best_weights: Path):
     print(f"[INFO] Saved to {output_dir}")
 
 
-# ─── MAIN ───────────────────────────────────────────────────────────────────
+# ─── MAIN ─────────
 if __name__ == "__main__":
     print("=" * 60)
     print(" FloraLens — YOLOv8 Flower Classification")
@@ -134,7 +129,6 @@ if __name__ == "__main__":
 
     train()
 
-    # ✅ FIXED PATH (NO DUPLICATION)
     best_pt = Path("runs/classify/flowers_train/weights/best.pt")
 
     if not best_pt.exists():

@@ -12,11 +12,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
 
-# Load YOLO model (custom trained or pretrained)
-# If you have trained a custom model, replace with: YOLO("runs/classify/train/weights/best.pt")
-model = YOLO("yolov8n-cls.pt")  # classification model for flowers
+model = YOLOmodel = YOLO("runs/classify/flowers_train/weights/best.pt") 
 
-# Flower class names (update after training with your dataset)
 FLOWER_CLASSES = {
     0: "daisy",
     1: "dandelion",
