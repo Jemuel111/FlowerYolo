@@ -1,7 +1,6 @@
 import os
 import time
-import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 from ultralytics import YOLO
 from werkzeug.utils import secure_filename
 
@@ -12,7 +11,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
 
-model = YOLOmodel = YOLO("runs/classify/flowers_train/weights/best.pt") 
+model = YOLO("best.pt")
 
 FLOWER_CLASSES = {
     0: "daisy",
@@ -66,7 +65,7 @@ def predict():
         return render_template('index.html', error="No file selected.")
 
     if not allowed_file(file.filename):
-        return render_template('index.html', error="Invalid file type. Please upload an image (PNG, JPG, JPEG, GIF, BMP, WEBP).")
+        return render_template('index.html', error="Invalid file type.")
 
     try:
         # Save uploaded file
@@ -80,41 +79,38 @@ def predict():
         results = model(upload_path)
         result = results[0]
 
-        # Save result image with bounding boxes / overlays
+        # Save result image
         result_filename = f"result_{unique_filename}"
         result_path = os.path.join(app.config['RESULT_FOLDER'], result_filename)
         result.save(filename=result_path)
 
-        # Parse detection data
         detections = []
 
-        # For classification models
+        # Classification
         if hasattr(result, 'probs') and result.probs is not None:
             probs = result.probs
-            top5_indices = probs.top5
-            top5_conf = probs.top5conf.tolist()
-
-            for idx, conf in zip(top5_indices, top5_conf):
+            for idx, conf in zip(probs.top5, probs.top5conf.tolist()):
                 class_name = result.names[idx]
                 detections.append({
                     'label': class_name,
                     'confidence': round(conf * 100, 2),
                     'emoji': FLOWER_EMOJIS.get(class_name.lower(), '🌸'),
-                    'description': FLOWER_DESCRIPTIONS.get(class_name.lower(), 'A beautiful flower species.')
+                    'description': FLOWER_DESCRIPTIONS.get(class_name.lower(), 'A flower.')
                 })
 
-        # For detection models (bounding boxes)
+        # Detection
         elif hasattr(result, 'boxes') and result.boxes is not None and len(result.boxes) > 0:
             for box in result.boxes:
                 class_id = int(box.cls[0])
                 conf = float(box.conf[0])
                 class_name = result.names[class_id]
                 xyxy = box.xyxy[0].tolist()
+
                 detections.append({
                     'label': class_name,
                     'confidence': round(conf * 100, 2),
                     'emoji': FLOWER_EMOJIS.get(class_name.lower(), '🌸'),
-                    'description': FLOWER_DESCRIPTIONS.get(class_name.lower(), 'A detected flower species.'),
+                    'description': FLOWER_DESCRIPTIONS.get(class_name.lower(), 'Detected flower.'),
                     'bbox': [round(x) for x in xyxy]
                 })
 
@@ -123,18 +119,15 @@ def predict():
                 'label': 'Unknown',
                 'confidence': 0,
                 'emoji': '❓',
-                'description': 'No flower detected with sufficient confidence. Try a clearer image.'
+                'description': 'No flower detected.'
             }]
-
-        top_prediction = detections[0] if detections else None
 
         return render_template(
             'index.html',
             original_image=upload_path,
             result_image=result_path,
             detections=detections,
-            top_prediction=top_prediction,
-            filename=filename
+            top_prediction=detections[0]
         )
 
     except Exception as e:
@@ -148,4 +141,4 @@ def about():
 
 if __name__ == '__main__':
     ensure_dirs()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
